@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏰 Contador de Puntos Hogwarts</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gryffindor: #740001;
+            --slytherin: #1a472a;
+            --hufflepuff: #f3bf12;
+            --ravenclaw: #0e1a40;
+            --gold: #d3a625;
+            --light: #f5f1e8;
+            --dark: #0f0e0e;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .title {
+            font-size: 3em;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(211, 166, 37, 0.6);
+            margin: 20px 0;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 20px rgba(211, 166, 37, 0.6); }
+            50% { text-shadow: 0 0 40px rgba(211, 166, 37, 1), 0 0 60px rgba(211, 166, 37, 0.8); }
+        }
+
+        .subtitle {
+            color: var(--gold);
+            font-size: 1.1em;
+            letter-spacing: 2px;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(15, 14, 14, 0.7);
+            border: 2px solid var(--gold);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(211, 166, 37, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 32px rgba(211, 166, 37, 0.4);
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: var(--gold);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--gold);
+            border-radius: 10px;
+            padding: 15px;
+            color: var(--light);
+            font-size: 1em;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        textarea::placeholder {
+            color: rgba(211, 166, 37, 0.5);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--gold), #b8860b);
+            color: var(--dark);
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(211, 166, 37, 0.8);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .results {
+            background: rgba(15, 14, 14, 0.7);
+            border: 2px solid var(--gold);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(211, 166, 37, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .results h2 {
+            color: var(--gold);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 10px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: rgba(0, 0, 0, 0.5);
+            border-left: 5px solid var(--gold);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .summary-label {
+            color: rgba(211, 166, 37, 0.8);
+            font-size: 0.9em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .summary-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 30px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th {
+            background: rgba(211, 166, 37, 0.2);
+            color: var(--gold);
+            padding: 15px;
+            text-align: left;
+            border-bottom: 2px solid var(--gold);
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(211, 166, 37, 0.3);
+        }
+
+        tr:hover {
+            background: rgba(211, 166, 37, 0.1);
+        }
+
+        .person-name {
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        .emoji-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: rgba(211, 166, 37, 0.2);
+            border-radius: 20px;
+            margin: 2px;
+            font-size: 0.9em;
+        }
+
+        .points-highlight {
+            font-weight: bold;
+            color: var(--gold);
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(211, 166, 37, 0.5);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: rgba(211, 166, 37, 0.8);
+            font-size: 0.85em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        .format-info {
+            background: rgba(211, 166, 37, 0.1);
+            border-left: 4px solid var(--gold);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+
+        .format-info strong {
+            color: var(--gold);
+        }
+
+        .emoji-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+        }
+
+        .emoji-section h3 {
+            color: var(--gold);
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .emoji-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+        }
+
+        .emoji-item {
+            background: rgba(211, 166, 37, 0.2);
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .emoji-item:hover {
+            background: rgba(211, 166, 37, 0.4);
+            transform: scale(1.1);
+        }
+
+        .emoji-name {
+            font-size: 0.8em;
+            color: rgba(211, 166, 37, 0.8);
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .title {
+                font-size: 2em;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .alert-success {
+            background: rgba(46, 204, 113, 0.2);
+            border-left: 4px solid #2ecc71;
+            color: #2ecc71;
+        }
+
+        .alert-error {
+            background: rgba(231, 76, 60, 0.2);
+            border-left: 4px solid #e74c3c;
+            color: #e74c3c;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: var(--gold);
+        }
+
+        .spinner {
+            border: 4px solid rgba(211, 166, 37, 0.3);
+            border-top: 4px solid var(--gold);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(211, 166, 37, 0.6);
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="title">🏰 Contador de Puntos Hogwarts</h1>
+            <p class="subtitle">Suma los puntos para las casas</p>
+        </header>
+
+        <div class="content">
+            <div class="card">
+                <h2>📝 Ingresa Mensajes</h2>
+                <div class="format-info">
+                    <strong>Formato:</strong> <code>+[puntos][emoji]@[nombre]</code><br>
+                    <strong>Ejemplo:</strong> <code>+10⭐@Harry Potter</code><br>
+                    <small>✓ Limpia caracteres de Telegram automáticamente<br>
+                    ✓ Soporta espacios en nombres<br>
+                    ✓ Cualquier emoji funciona</small>
+                </div>
+                <textarea id="messageInput" placeholder="+10⭐@Harry
++5💛@Hermione
++15🐍@Draco
++8🦅@Luna
+...pega aquí tus mensajes del grupo"></textarea>
+                <div class="button-group">
+                    <button onclick="analyzeMessages()">✨ Analizar Mensajes</button>
+                    <button class="btn-clear" onclick="clearAll()">🗑️ Limpiar</button>
+                </div>
+                <div class="alert alert-success" id="successAlert"></div>
+                <div class="alert alert-error" id="errorAlert"></div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analizando puntos mágicos...</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🎯 Casas Populares</h2>
+                <p style="margin-bottom: 20px; color: rgba(211, 166, 37, 0.8);">Emojis que representan las casas:</p>
+                <div class="emoji-section">
+                    <h3>🦁 Gryffindor (Coraje)</h3>
+                    <div class="emoji-list">
+                        <div class="emoji-item" onclick="copyFormat('⭐')">
+                            <div style="font-size: 2em;">⭐</div>
+                            <div class="emoji-name">Estrella</div>
+                        </div>
+                        <div class="emoji-item" onclick="copyFormat('🦁')">
+                            <div style="font-size: 2em;">🦁</div>
+                            <div class="emoji-name">León</div>
+                        </div>
+                        <div class="emoji-item" onclick="copyFormat('❤️')">
+                            <div style="font-size: 2em;">❤️</div>
+                            <div class="emoji-name">Corazón Rojo</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="emoji-section">
+                    <h3>🐍 Slytherin (Astucia)</h3>
+                    <div class="emoji-list">
+                        <div class="emoji-item" onclick="copyFormat('🐍')">
+                            <div style="font-size: 2em;">🐍</div>
+                            <div class="emoji-name">Serpiente</div>
+                        </div>
+                        <div class="emoji-item" onclick="copyFormat('💚')">
+                            <div style="font-size: 2em;">💚</div>
+                            <div class="emoji-name">Corazón Verde</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="emoji-section">
+                    <h3>🦡 Hufflepuff (Lealtad)</h3>
+                    <div class="emoji-list">
+                        <div class="emoji-item" onclick="copyFormat('💛')">
+                            <div style="font-size: 2em;">💛</div>
+                            <div class="emoji-name">Corazón Amarillo</div>
+                        </div>
+                        <div class="emoji-item" onclick="copyFormat('🦡')">
+                            <div style="font-size: 2em;">🦡</div>
+                            <div class="emoji-name">Tejón</div>
+                        </div>
+                        <div class="emoji-item" onclick="copyFormat('🌻')">
+                            <div style="font-size: 2em;">🌻</div>
+                            <div class="emoji-name">Girasol</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="emoji-section">
+                    <h3>🦅 Ravenclaw (Ingenio)</h3>
+                    <div class="emoji-list">
+                        <div class="emoji-item" onclick="copyFormat('🦅')">
+                            <div style="font-size: 2em;">🦅</div>
+                            <div class="emoji-name">Águila</div>
+                        </div>
+                        <div class="emoji-item" onclick="copyFormat('💙')">
+                            <div style="font-size: 2em;">💙</div>
+                            <div class="emoji-name">Corazón Azul</div>
+                        </div>
+                        <div class="emoji-item" onclick="copyFormat('📚')">
+                            <div style="font-size: 2em;">📚</div>
+                            <div class="emoji-name">Libros</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultsContainer" style="display: none;">
+            <div class="results">
+                <h2>✨ Resultados del Análisis</h2>
+                
+                <div class="chart-container">
+                    <canvas id="pointsChart"></canvas>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-label">Personas</div>
+                        <div class="summary-value" id="totalPersonas">0</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">Emojis Únicos</div>
+                        <div class="summary-value" id="totalEmojis">0</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">Puntos Totales</div>
+                        <div class="summary-value" id="totalPoints">0</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">Promedio/Persona</div>
+                        <div class="summary-value" id="averagePoints">0</div>
+                    </div>
+                </div>
+
+                <h3 style="color: var(--gold); margin: 30px 0 20px; border-bottom: 1px solid var(--gold); padding-bottom: 10px;">📊 Puntos por Persona</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Persona</th>
+                                <th>Detalles</th>
+                                <th style="text-align: right;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTable">
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 style="color: var(--gold); margin: 30px 0 20px; border-bottom: 1px solid var(--gold); padding-bottom: 10px;">🎯 Puntos por Emoji</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Emoji</th>
+                                <th>Persona</th>
+                                <th style="text-align: right;">Puntos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emojiTable">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Mayor Puntuación</div>
+                        <div class="stat-value" id="maxScore">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Menor Puntuación</div>
+                        <div class="stat-value" id="minScore">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Emoji Favorito</div>
+                        <div class="stat-value" id="topEmoji">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Persona Ganadora</div>
+                        <div class="stat-value" id="winner">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chart = null;
+
+        function cleanTelegramChars(text) {
+            // Limpiar caracteres especiales de Telegram
+            return text
+                .replace(/[\u2061\u2062\u2063]/g, '') // Caracteres invisibles de Telegram
+                .replace(/⁨/g, '')
+                .replace(/⁩/g, '')
+                .replace(/\*/g, '')
+                .trim();
+        }
+
+        function parseMessages(text) {
+            const lines = text.split('\n');
+            const data = {};
+            const emojiData = {};
+
+            for (const line of lines) {
+                const cleaned = cleanTelegramChars(line);
+                if (!cleaned) continue;
+
+                // Patrón: +[número][emoji]@[nombre]
+                const match = cleaned.match(/^\+(\d+)([\p{Emoji}]+)@(.+)$/u);
+                if (match) {
+                    const points = parseInt(match[1]);
+                    const emoji = match[2].trim();
+                    const name = cleanTelegramChars(match[3]).trim();
+
+                    if (!data[name]) {
+                        data[name] = { total: 0, emojis: {} };
+                    }
+                    
+                    data[name].total += points;
+                    data[name].emojis[emoji] = (data[name].emojis[emoji] || 0) + points;
+
+                    if (!emojiData[emoji]) {
+                        emojiData[emoji] = {};
+                    }
+                    emojiData[emoji][name] = (emojiData[emoji][name] || 0) + points;
+                }
+            }
+
+            return { personData: data, emojiData: emojiData };
+        }
+
+        function analyzeMessages() {
+            const input = document.getElementById('messageInput').value;
+            const successAlert = document.getElementById('successAlert');
+            const errorAlert = document.getElementById('errorAlert');
+            const loading = document.getElementById('loading');
+
+            successAlert.style.display = 'none';
+            errorAlert.style.display = 'none';
+            loading.style.display = 'block';
+
+            setTimeout(() => {
+                if (!input.trim()) {
+                    errorAlert.textContent = '❌ Por favor ingresa algunos mensajes';
+                    errorAlert.style.display = 'block';
+                    loading.style.display = 'none';
+                    return;
+                }
+
+                const { personData, emojiData } = parseMessages(input);
+
+                if (Object.keys(personData).length === 0) {
+                    errorAlert.textContent = '❌ No se encontraron mensajes en el formato correcto. Usa: +[puntos][emoji]@[nombre]';
+                    errorAlert.style.display = 'block';
+                    loading.style.display = 'none';
+                    return;
+                }
+
+                displayResults(personData, emojiData);
+                successAlert.textContent = `✅ ¡Análisis completado! Se encontraron ${Object.keys(personData).length} personas`;
+                successAlert.style.display = 'block';
+                loading.style.display = 'none';
+            }, 600);
+        }
+
+        function displayResults(personData, emojiData) {
+            const container = document.getElementById('resultsContainer');
+            const resultsTable = document.getElementById('resultsTable');
+            const emojiTable = document.getElementById('emojiTable');
+
+            resultsTable.innerHTML = '';
+            emojiTable.innerHTML = '';
+
+            const sortedPeople = Object.entries(personData)
+                .sort((a, b) => b[1].total - a[1].total);
+
+            let totalPoints = 0;
+            let totalEmojis = new Set();
+
+            sortedPeople.forEach(([name, data]) => {
+                totalPoints += data.total;
+                Object.keys(data.emojis).forEach(e => totalEmojis.add(e));
+
+                const row = document.createElement('tr');
+                const emojiList = Object.entries(data.emojis)
+                    .map(([e, pts]) => `<span class="emoji-badge">${e} ${pts}</span>`)
+                    .join('');
+
+                row.innerHTML = `
+                    <td class="person-name">${name}</td>
+                    <td>${emojiList}</td>
+                    <td style="text-align: right;"><span class="points-highlight">${data.total}</span></td>
+                `;
+                resultsTable.appendChild(row);
+            });
+
+            // Tabla de emojis
+            Object.entries(emojiData).forEach(([emoji, people]) => {
+                Object.entries(people).forEach(([name, points]) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="font-size: 1.5em;">${emoji}</td>
+                        <td class="person-name">${name}</td>
+                        <td style="text-align: right;"><span class="points-highlight">${points}</span></td>
+                    `;
+                    emojiTable.appendChild(row);
+                });
+            });
+
+            // Actualizar estadísticas
+            const totalPersonas = Object.keys(personData).length;
+            const averagePoints = (totalPoints / totalPersonas).toFixed(1);
+            const maxScore = Math.max(...Object.values(personData).map(p => p.total));
+            const minScore = Math.min(...Object.values(personData).map(p => p.total));
+            const topEmoji = Object.entries(emojiData)
+                .sort((a, b) => Object.values(b[1]).reduce((s, p) => s + p, 0) - Object.values(a[1]).reduce((s, p) => s + p, 0))[0][0];
+            const winner = sortedPeople[0][0];
+
+            document.getElementById('totalPersonas').textContent = totalPersonas;
+            document.getElementById('totalEmojis').textContent = totalEmojis.size;
+            document.getElementById('totalPoints').textContent = totalPoints;
+            document.getElementById('averagePoints').textContent = averagePoints;
+            document.getElementById('maxScore').textContent = `${maxScore}pts`;
+            document.getElementById('minScore').textContent = `${minScore}pts`;
+            document.getElementById('topEmoji').textContent = topEmoji;
+            document.getElementById('winner').textContent = winner;
+
+            createChart(personData);
+            container.style.display = 'block';
+        }
+
+        function createChart(personData) {
+            const ctx = document.getElementById('pointsChart').getContext('2d');
+            
+            const labels = Object.keys(personData).sort((a, b) => personData[b].total - personData[a].total);
+            const data = labels.map(name => personData[name].total);
+            const colors = [
+                'rgba(116, 0, 1, 0.8)',      // Gryffindor
+                'rgba(26, 71, 42, 0.8)',     // Slytherin
+                'rgba(243, 191, 18, 0.8)',   // Hufflepuff
+                'rgba(14, 26, 64, 0.8)',     // Ravenclaw
+                'rgba(211, 166, 37, 0.8)'    // Gold
+            ];
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Puntos',
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: 'rgba(211, 166, 37, 1)',
+                        borderWidth: 2,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'rgba(211, 166, 37, 1)',
+                                font: { size: 12 }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: 'rgba(211, 166, 37, 0.8)' },
+                            grid: { color: 'rgba(211, 166, 37, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: 'rgba(211, 166, 37, 0.8)' },
+                            grid: { color: 'rgba(211, 166, 37, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function clearAll() {
+            if (confirm('¿Estás seguro de que deseas limpiar todo?')) {
+                document.getElementById('messageInput').value = '';
+                document.getElementById('resultsContainer').style.display = 'none';
+                document.getElementById('successAlert').style.display = 'none';
+                document.getElementById('errorAlert').style.display = 'none';
+            }
+        }
+
+        function copyFormat(emoji) {
+            const input = document.getElementById('messageInput');
+            const cursor = input.selectionStart;
+            const text = input.value;
+            const format = `+[puntos]${emoji}@[nombre] `;
+            const newText = text.slice(0, cursor) + format + text.slice(cursor);
+            input.value = newText;
+            input.focus();
+            input.setSelectionRange(cursor + format.length, cursor + format.length);
+        }
+
+        // Permitir Enter para enviar
+        document.getElementById('messageInput')?.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                analyzeMessages();
+            }
+        });
+    </script>
+</body>
+</html>

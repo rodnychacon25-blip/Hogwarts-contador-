@@ -1,0 +1,12 @@
+{
+  "name": "contador-puntos-hogwarts",
+  "version": "1.0.0",
+  "description": "Contador de puntos de casas Hogwarts con análisis de emojis",
+  "main": "index.html",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["hogwarts", "puntos", "emojis", "harry potter"],
+  "author": "",
+  "license": "MIT"
+}
